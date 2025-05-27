@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funny Cat Showcase</title>
+  <style>
+    body { font-family: 'Patrick Hand', sans-serif; background: #f0f8ff; color: #333; margin: 0; padding: 1rem; display: flex; flex-direction: column; align-items: center; }
+    #container { max-width: 600px; width: 100%; text-align: center; }
+    h1 { font-size: 2rem; margin-bottom: 1rem; }
+    #cat-media { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    button { background: #ffcccb; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 1rem; cursor: pointer; margin: 1rem 0; }
+    button:hover { opacity: 0.9; }
+    #info { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 1rem; display: none; text-align: left; }
+    #info h2 { margin-top: 0; }
+    #loader { display: none; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="container">
+    <h1>😺 Funny Cat Showcase</h1>
+    <button id="new-btn">Show me a Cat!</button>
+    <div id="loader">Loading...</div>
+    <div id="media-wrapper">
+      <!-- Image or video will appear here -->
+      <img id="cat-media" src="" alt="Funny Cat" class="hidden">
+      <video id="cat-video" class="hidden" controls></video>
+    </div>
+    <button id="info-btn" class="hidden">Tell me about this cat</button>
+    <div id="info">
+      <h2 id="cat-breed"></h2>
+      <p id="cat-description"></p>
+      <p><strong>Origin:</strong> <span id="cat-origin"></span></p>
+      <p><strong>Temperament:</strong> <span id="cat-temperament"></span></p>
+    </div>
+  </div>
+
+  <script>
+    const newBtn = document.getElementById('new-btn');
+    const loader = document.getElementById('loader');
+    const img = document.getElementById('cat-media');
+    const video = document.getElementById('cat-video');
+    const infoBtn = document.getElementById('info-btn');
+    const infoBox = document.getElementById('info');
+    let lastCatData = null;
+
+    async function fetchCat() {
+      loader.style.display = 'block';
+      infoBox.style.display = 'none';
+      infoBtn.classList.add('hidden');
+      img.classList.add('hidden'); video.classList.add('hidden');
+
+      // Get random cat image with breed info if available
+      const res = await fetch('https://api.thecatapi.com/v1/images/search?include_breeds=true');
+      const [data] = await res.json();
+      lastCatData = data;
+
+      if (data.mime_type && data.mime_type.includes('video')) {
+        video.src = data.url;
+        video.classList.remove('hidden');
+      } else {
+        img.src = data.url;
+        img.classList.remove('hidden');
+      }
+
+      loader.style.display = 'none';
+      infoBtn.classList.remove('hidden');
+    }
+
+    newBtn.onclick = fetchCat;
+
+    infoBtn.onclick = () => {
+      if (!lastCatData) return;
+      const breeds = lastCatData.breeds;
+      if (breeds && breeds.length) {
+        const b = breeds[0];
+        document.getElementById('cat-breed').innerText = b.name;
+        document.getElementById('cat-description').innerText = b.description;
+        document.getElementById('cat-origin').innerText = b.origin;
+        document.getElementById('cat-temperament').innerText = b.temperament;
+      } else {
+        document.getElementById('cat-breed').innerText = 'Unknown Breed';
+        document.getElementById('cat-description').innerText = 'No detailed info available for this cute kitty.';
+        document.getElementById('cat-origin').innerText = '—';
+        document.getElementById('cat-temperament').innerText = '—';
+      }
+      infoBox.style.display = 'block';
+    };
+  </script>
+</body>
+</html>
