@@ -45,6 +45,10 @@
     const infoBox = document.getElementById('info');
     let lastCatData = null;
 
+    // Your Cat API key
+    const API_KEY = 'live_yQW8FZlpCxKvQU7puG1vqbKu4PL4Jo7Q3wLnw7aYUUlsgD7XSW6gh7FmRIlYCeZB';
+    const API_URL = 'https://api.thecatapi.com/v1/images/search?include_breeds=true';
+
     async function fetchCat() {
       loader.style.display = 'block';
       infoBox.style.display = 'none';
@@ -53,19 +57,28 @@
       video.classList.add('hidden');
 
       try {
-        const res = await fetch('https://api.thecatapi.com/v1/images/search?include_breeds=true');
+        const res = await fetch(API_URL, {
+          headers: { 'x-api-key': API_KEY }
+        });
+        if (!res.ok) throw new Error('API error ' + res.status);
         const [data] = await res.json();
         lastCatData = data;
 
-        if (data.mime_type && data.mime_type.includes('video')) {
+        const isVideo = data.mime_type
+          ? data.mime_type.startsWith('video')
+          : /\.(mp4|webm|ogg)$/i.test(data.url);
+
+        if (isVideo) {
           video.src = data.url;
+          video.load();
           video.classList.remove('hidden');
         } else {
           img.src = data.url;
           img.classList.remove('hidden');
         }
       } catch (err) {
-        alert('Failed to load cat. Try again!');
+        console.error(err);
+        alert('Failed to load cat. Check your API key and network.');
       } finally {
         loader.style.display = 'none';
         infoBtn.classList.remove('hidden');
@@ -85,7 +98,7 @@
         document.getElementById('cat-temperament').innerText = b.temperament;
       } else {
         document.getElementById('cat-breed').innerText = 'Unknown Breed';
-        document.getElementById('cat-description').innerText = 'No detailed info available for this cute kitty.';
+        document.getElementById('cat-description').innerText = 'No detailed info available. Try again!';
         document.getElementById('cat-origin').innerText = '—';
         document.getElementById('cat-temperament').innerText = '—';
       }
